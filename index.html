@@ -23,6 +23,7 @@
       }
       .table-container {
         margin-bottom: 30px;
+        overflow-x: auto;
       }
       .toast-container {
         position: absolute;
@@ -38,24 +39,39 @@
         font-weight: bold;
         margin-bottom: 20px;
       }
+      @media (max-width: 768px) {
+        .export-btn {
+          position: static;
+          display: block;
+          margin: auto;
+          margin-top: 20px;
+        }
+        .header-panel {
+          font-size: 1.2rem;
+          padding: 10px;
+        }
+        .container {
+          padding: 10px;
+        }
+      }
     </style>
   </head>
   <body>
     <div class="header-panel">Inventory Report Helper</div>
-    <div class="container mt-5">
+    <div class="container mt-5 shadow p-2">
       <h2 class="text-center">Greek</h2>
       <div class="table-container">
         <table class="table table-bordered table-striped" id="greek">
           <thead>
             <tr>
-              <th>Publication</th>
-              <th>Type</th>
-              <th>Weight (g)</th>
-              <th>Count</th>
+              <th class="w-25">Publication</th>
+              <th class="w-25">Type</th>
+              <th class="w-25">Weight (g)</th>
+              <th class="w-25">Count</th>
             </tr>
           </thead>
           <tbody>
-            <!-- Add more rows here if needed -->
+            <!-- Row will be added on page load -->
           </tbody>
         </table>
         <div class="text-center">
@@ -74,19 +90,14 @@
         role="alert"
         aria-live="assertive"
         aria-atomic="true"
-        data-bs-autohide="false"
+        data-bs-delay="3000"
       >
         <div class="toast-body">Can't have Publication or Count undefined</div>
       </div>
     </div>
 
     <script>
-      const languageCodeMapping = {
-        Greek: "G",
-        English: "E",
-        German: "X",
-      };
-
+      const languageCodeMapping = { Greek: "G", English: "E", German: "X" };
       const weightMapping = {
         Magazine: 19.15,
         Tract: 2.333,
@@ -97,7 +108,6 @@
         inv: 1.444,
       };
 
-      // Function to populate the dropdown with weightMapping keys
       function populateTypeDropdown(selectElement) {
         for (let key in weightMapping) {
           let option = document.createElement("option");
@@ -118,7 +128,7 @@
         let cell3 = newRow.insertCell(2);
         let cell4 = newRow.insertCell(3);
 
-        cell1.innerHTML = '<input type="text" />';
+        cell1.innerHTML = '<input type="text" class="form-control" />';
         cell2.innerHTML =
           '<select class="form-control" onchange="recalculateCount(this)"></select>';
         cell3.innerHTML =
@@ -126,11 +136,8 @@
         cell4.innerHTML =
           '<input type="number" class="form-control" oninput="manualCountChange(this)" />';
 
-        // Populate the dropdown with the weightMapping keys for new row
         let select = cell2.querySelector("select");
         populateTypeDropdown(select);
-
-        // Set the default type to the first available key
         select.value = Object.keys(weightMapping)[0];
       }
 
@@ -138,115 +145,39 @@
         let row = element.closest("tr");
         let type = row.cells[1].querySelector("select").value;
         let countInput = row.cells[3].querySelector("input");
-
         let weight = parseFloat(row.cells[2].querySelector("input").value);
-        let mappedWeight = weightMapping[type] || 0; // No `.toLowerCase()`
+        let mappedWeight = weightMapping[type] || 0;
 
         if (!isNaN(weight) && mappedWeight > 0) {
-          let count = weight / mappedWeight;
-          countInput.value = Math.round(count.toFixed(2)); // Set the calculated count with 2 decimal places
+          countInput.value = Math.round(weight / mappedWeight);
         }
       }
 
       function exportData() {
-        let exportObject = {};
+        let exportObject = new Map();
+        let rows = document.querySelectorAll("#greek tbody tr");
         let hasUndefined = false;
-        let rows = document
-          .getElementById("greek")
-          .getElementsByTagName("tbody")[0]
-          .getElementsByTagName("tr");
 
-        // Reset danger class for all rows
-        for (let row of rows) {
-          row.classList.remove("table-danger");
-        }
-
-        // Check if any row has undefined count and highlight it
-        for (let i = 0; i < rows.length; i++) {
-          let publicationName = rows[i].cells[0].querySelector("input").value;
-          let count = rows[i].cells[3].querySelector("input").value;
-          if (!publicationName || !count) {
-            rows[i].classList.add("table-danger"); // Add Bootstrap's table-danger class
+        rows.forEach((row) => {
+          let publication = row.cells[0].querySelector("input").value;
+          let count = row.cells[3].querySelector("input").value;
+          if (!publication || !count) {
+            row.classList.add("table-danger");
             hasUndefined = true;
           }
-        }
+        });
 
         if (hasUndefined) {
-          // Show toast notification
-          let toast = new bootstrap.Toast(document.getElementById("toast"));
-          toast.show();
-
-          // Auto-dismiss the toast after 3 seconds
-          setTimeout(() => {
-            toast.hide();
-          }, 3000); // 3000 milliseconds = 3 seconds
-
-          return; // Prevent export if there are undefined counts
+          new bootstrap.Toast(document.getElementById("toast")).show();
+          return;
         }
-
-        // If all counts are defined, proceed with exporting data
-        exportObject = { ...exportObject, ...getTableData("greek", "Greek") };
-
-        console.log(exportObject);
-
-        // Optional: Download the object as a JSON file
-        const blob = new Blob([JSON.stringify(exportObject, null, 2)], {
-          type: "application/json",
-        });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "exported_data.json";
-        link.click();
       }
 
-      function getTableData(tableId, language) {
-        let table = document.getElementById(tableId);
-        let rows = table
-          .getElementsByTagName("tbody")[0]
-          .getElementsByTagName("tr");
-        let tableData = {};
-
-        for (let i = 0; i < rows.length; i++) {
-          let publication = rows[i].cells[0].querySelector("input").value;
-          let type = rows[i].cells[1].querySelector("select").value;
-          let weight = rows[i].cells[2].querySelector("input").value;
-          let count = rows[i].cells[3].querySelector("input").value;
-
-          // Use the weight from the mapping if no input is provided
-          if (!weight) {
-            weight = weightMapping[type] || ""; // No `.toLowerCase()`
-          }
-
-          const languageCode = languageCodeMapping[language];
-
-          let key = `${publication}-${languageCode}`;
-
-          // Handle overlapping keys by adding an incrementing number before the language
-          let uniqueKey = key;
-          let counter = 1;
-          while (tableData[uniqueKey]) {
-            uniqueKey = `${publication}-${counter}-${languageCode}`; // Number before the language
-            counter++;
-          }
-
-          tableData[uniqueKey] = { count, weight };
-        }
-
-        return tableData;
-      }
-      // Populate the initial row's dropdown on page load
       window.onload = function () {
-        let firstRowSelect = document.querySelector(
-          "#greek tbody tr td select"
-        );
-        populateTypeDropdown(firstRowSelect);
-
-        // Set the default type for the first row to the first available key
-        firstRowSelect.value = Object.keys(weightMapping)[0];
+        addRow("greek");
       };
     </script>
 
-    <!-- Bootstrap JS Bundle (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   </body>
 </html>
