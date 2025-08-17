@@ -105,11 +105,6 @@
     </div>
 
     <script>
-      const languageCodeMapping = {
-        Greek: "G",
-        English: "E",
-        German: "X",
-      };
       const weightMapping = {
         Magazine: 19.15,
         Tract: 2.333,
@@ -183,29 +178,20 @@
           .then(() => showToast("Data copied to clipboard!", "success"))
           .catch((err) => console.error("Failed to copy:", err));
       }
+
       function generateExportText(exportObject) {
         let output = "";
-        let languages = {};
 
-        // Group keys by language
-        for (let key in exportObject) {
-          let parts = key.split("-");
-          let lang = parts[parts.length - 1]; // last part is the language code
-          if (!languages[lang]) {
-            languages[lang] = {};
-          }
-          languages[lang][key] = exportObject[key];
-        }
+        // Get description from title (editable later if you change <h2>)
+        const description =
+          document.querySelector(".container h2").textContent || "Unknown";
 
-        // Sort languages alphabetically, then sort keys inside each language
-        let sortedLangs = Object.keys(languages).sort();
-        for (let lang of sortedLangs) {
-          output += `--- Greek ---\n`;
-          let sortedKeys = Object.keys(languages[lang]).sort();
-          for (let key of sortedKeys) {
-            output += `${key}: ${languages[lang][key]}\n`;
-          }
-          output += "\n"; // extra newline between languages
+        output += `--- ${description} ---\n`;
+
+        // Sort keys alphabetically
+        let sortedKeys = Object.keys(exportObject).sort();
+        for (let key of sortedKeys) {
+          output += `${key}: ${exportObject[key]}\n`;
         }
 
         return output.trim();
@@ -249,7 +235,7 @@
           return null;
         }
 
-        exportObject = { ...exportObject, ...getTableData("greek", "Greek") };
+        exportObject = { ...exportObject, ...getTableData("greek") };
         return exportObject;
       }
       function showToast(message, type = "success") {
@@ -261,7 +247,7 @@
         toast.show();
         setTimeout(() => toast.hide(), 3000);
       }
-      function getTableData(tableId, language) {
+      function getTableData(tableId) {
         let table = document.getElementById(tableId);
         let rows = table
           .getElementsByTagName("tbody")[0]
@@ -276,13 +262,12 @@
           if (!weight) {
             weight = weightMapping[type] || ""; // No `.toLowerCase()`
           }
-          const languageCode = languageCodeMapping[language];
-          let key = `${publication}-${languageCode}`;
+          let key = `${publication}`;
           // Handle overlapping keys by adding an incrementing number before the language
           let uniqueKey = key;
           let counter = 1;
           while (tableData[uniqueKey]) {
-            uniqueKey = `${publication}-${counter}-${languageCode}`; // Number before the language
+            uniqueKey = `${publication}-${counter}`; // Number before the language
             counter++;
           }
           tableData[uniqueKey] = count;
