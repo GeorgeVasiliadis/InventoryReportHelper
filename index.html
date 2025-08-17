@@ -79,15 +79,28 @@
     </div>
 
     <div class="toast-container">
+      <!-- Error toast -->
       <div
-        id="toast"
-        class="toast"
+        id="toast-error"
+        class="toast text-bg-danger"
         role="alert"
         aria-live="assertive"
         aria-atomic="true"
         data-bs-delay="3000"
       >
-        <div class="toast-body">Can't have Publication or Count undefined</div>
+        <div class="toast-body text-center">Action Error!</div>
+      </div>
+
+      <!-- Success toast -->
+      <div
+        id="toast-success"
+        class="toast text-bg-success"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        data-bs-delay="3000"
+      >
+        <div class="toast-body text-center">Action successful!</div>
       </div>
     </div>
 
@@ -167,7 +180,7 @@
 
         navigator.clipboard
           .writeText(exportString)
-          .then(() => console.log("Data copied to clipboard"))
+          .then(() => showToast("Data copied to clipboard!", "success"))
           .catch((err) => console.error("Failed to copy:", err));
       }
       function generateExportText(exportObject) {
@@ -209,6 +222,7 @@
         link.href = URL.createObjectURL(blob);
         link.download = "exported_data.json";
         link.click();
+        showToast("Data downloaded locally!", "success");
       }
 
       // Extracted common logic
@@ -230,16 +244,22 @@
             hasUndefined = true;
           }
         }
-
         if (hasUndefined) {
-          let toast = new bootstrap.Toast(document.getElementById("toast"));
-          toast.show();
-          setTimeout(() => toast.hide(), 3000);
+          showToast("Can't have Publication or Count undefined", "error");
           return null;
         }
 
         exportObject = { ...exportObject, ...getTableData("greek", "Greek") };
         return exportObject;
+      }
+      function showToast(message, type = "success") {
+        let toastEl = document.getElementById(
+          type === "success" ? "toast-success" : "toast-error"
+        );
+        toastEl.querySelector(".toast-body").textContent = message;
+        let toast = new bootstrap.Toast(toastEl);
+        toast.show();
+        setTimeout(() => toast.hide(), 3000);
       }
       function getTableData(tableId, language) {
         let table = document.getElementById(tableId);
