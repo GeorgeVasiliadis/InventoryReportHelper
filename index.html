@@ -47,9 +47,19 @@
   <body>
     <div class="header-panel">Inventory Report Helper</div>
     <div class="container mt-5 shadow p-2">
-      <h2 class="text-center">Greek</h2>
+      <div class="mb-3 text-center">
+        <label for="description" class="form-label fw-bold">Description</label>
+        <input
+          type="text"
+          id="description"
+          class="form-control text-center"
+          value="Greek"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
       <div class="table-container">
-        <table class="table table-bordered table-striped" id="greek">
+        <table class="table table-bordered table-striped" id="table">
           <thead>
             <tr>
               <th class="w-25">Publication</th>
@@ -64,11 +74,10 @@
           </tbody>
         </table>
         <div class="text-center">
-          <button class="btn btn-secondary" onclick="addRow('greek')">+</button>
+          <button class="btn btn-secondary" onclick="addRow()">+</button>
         </div>
       </div>
     </div>
-
     <div class="text-center p-3">
       <button class="btn btn-outline-secondary" onclick="copyData()">
         <i class="bi bi-clipboard px-1"></i>Copy
@@ -123,9 +132,9 @@
           selectElement.appendChild(option);
         }
       }
-      function addRow(tableName) {
+      function addRow() {
         let table = document
-          .getElementById(tableName)
+          .getElementById("table")
           .getElementsByTagName("tbody")[0];
         let newRow = table.insertRow();
 
@@ -184,7 +193,7 @@
 
         // Get description from title (editable later if you change <h2>)
         const description =
-          document.querySelector(".container h2").textContent || "Unknown";
+          document.getElementById("description").value || "Inventory";
 
         output += `--- ${description} ---\n`;
 
@@ -216,7 +225,7 @@
         let exportObject = {};
         let hasUndefined = false;
         let rows = document
-          .getElementById("greek")
+          .getElementById("table")
           .getElementsByTagName("tbody")[0]
           .getElementsByTagName("tr");
 
@@ -235,7 +244,7 @@
           return null;
         }
 
-        exportObject = { ...exportObject, ...getTableData("greek") };
+        exportObject = { ...exportObject, ...getTableData() };
         return exportObject;
       }
       function showToast(message, type = "success") {
@@ -247,8 +256,8 @@
         toast.show();
         setTimeout(() => toast.hide(), 3000);
       }
-      function getTableData(tableId) {
-        let table = document.getElementById(tableId);
+      function getTableData() {
+        let table = document.getElementById("table");
         let rows = table
           .getElementsByTagName("tbody")[0]
           .getElementsByTagName("tr");
@@ -277,14 +286,14 @@
       // Populate the initial row's dropdown on page load
       window.onload = function () {
         let firstRowSelect = document.querySelector(
-          "#greek tbody tr td select"
+          "#table tbody tr td select"
         );
         populateTypeDropdown(firstRowSelect);
         // Set the default type for the first row to the first available key
         firstRowSelect.value = Object.keys(weightMapping)[0];
       };
       window.onload = function () {
-        addRow("greek");
+        addRow();
       };
     </script>
 
