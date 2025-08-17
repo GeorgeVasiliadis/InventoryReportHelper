@@ -10,17 +10,6 @@
       rel="stylesheet"
     />
     <style>
-      .export-btn {
-        position: fixed;
-        top: 10px;
-        right: 10px;
-        padding: 10px 20px;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-      }
       .table-container {
         margin-bottom: 30px;
         overflow-x: auto;
@@ -40,12 +29,6 @@
         margin-bottom: 20px;
       }
       @media (max-width: 768px) {
-        .export-btn {
-          position: static;
-          display: block;
-          margin: auto;
-          margin-top: 20px;
-        }
         .header-panel {
           font-size: 1.2rem;
           padding: 10px;
@@ -81,8 +64,10 @@
       </div>
     </div>
 
-    <button class="export-btn" onclick="exportData()">Export</button>
-    <!-- Export button -->
+    <div class="text-center p-3">
+      <button class="btn btn-success" onclick="copyData()">Copy</button>
+      <button class="btn btn-primary" onclick="downloadData()">Download</button>
+    </div>
 
     <div class="toast-container">
       <div
@@ -165,39 +150,9 @@
           countInput.value = Math.round(count.toFixed(2)); // Set the calculated count with 2 decimal places
         }
       }
-      function exportData() {
-        let exportObject = {};
-        let hasUndefined = false;
-        let rows = document
-          .getElementById("greek")
-          .getElementsByTagName("tbody")[0]
-          .getElementsByTagName("tr");
-        // Reset danger class for all rows
-        for (let row of rows) {
-          row.classList.remove("table-danger");
-        }
-        // Check if any row has undefined count and highlight it
-        for (let i = 0; i < rows.length; i++) {
-          let publicationName = rows[i].cells[0].querySelector("input").value;
-          let count = rows[i].cells[3].querySelector("input").value;
-          if (!publicationName || !count) {
-            rows[i].classList.add("table-danger"); // Add Bootstrap's table-danger class
-            hasUndefined = true;
-          }
-        }
-        if (hasUndefined) {
-          // Show toast notification
-          let toast = new bootstrap.Toast(document.getElementById("toast"));
-          toast.show();
-          // Auto-dismiss the toast after 3 seconds
-          setTimeout(() => {
-            toast.hide();
-          }, 3000); // 3000 milliseconds = 3 seconds
-          return; // Prevent export if there are undefined counts
-        }
-        // If all counts are defined, proceed with exporting data
-        exportObject = { ...exportObject, ...getTableData("greek", "Greek") };
-        console.log(exportObject);
+      function copyData() {
+        let exportObject = prepareExport();
+        if (!exportObject) return; // Stop if invalid data
 
         const exportString = JSON.stringify(exportObject, null, 2);
 
@@ -205,14 +160,50 @@
           .writeText(exportString)
           .then(() => console.log("Data copied to clipboard"))
           .catch((err) => console.error("Failed to copy:", err));
+      }
 
-        const blob = new Blob([exportString], {
-          type: "application/json",
-        });
+      function downloadData() {
+        let exportObject = prepareExport();
+        if (!exportObject) return; // Stop if invalid data
+
+        const exportString = JSON.stringify(exportObject, null, 2);
+
+        const blob = new Blob([exportString], { type: "application/json" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.download = "exported_data.json";
         link.click();
+      }
+
+      // Extracted common logic
+      function prepareExport() {
+        let exportObject = {};
+        let hasUndefined = false;
+        let rows = document
+          .getElementById("greek")
+          .getElementsByTagName("tbody")[0]
+          .getElementsByTagName("tr");
+
+        for (let row of rows) row.classList.remove("table-danger");
+
+        for (let i = 0; i < rows.length; i++) {
+          let publicationName = rows[i].cells[0].querySelector("input").value;
+          let count = rows[i].cells[3].querySelector("input").value;
+          if (!publicationName || !count) {
+            rows[i].classList.add("table-danger");
+            hasUndefined = true;
+          }
+        }
+
+        if (hasUndefined) {
+          let toast = new bootstrap.Toast(document.getElementById("toast"));
+          toast.show();
+          setTimeout(() => toast.hide(), 3000);
+          return null;
+        }
+
+        exportObject = { ...exportObject, ...getTableData("greek", "Greek") };
+        return exportObject;
       }
       function getTableData(tableId, language) {
         let table = document.getElementById(tableId);
