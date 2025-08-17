@@ -163,12 +163,39 @@
         let exportObject = prepareExport();
         if (!exportObject) return; // Stop if invalid data
 
-        const exportString = JSON.stringify(exportObject, null, 2);
+        const exportString = generateExportText(exportObject);
 
         navigator.clipboard
           .writeText(exportString)
           .then(() => console.log("Data copied to clipboard"))
           .catch((err) => console.error("Failed to copy:", err));
+      }
+      function generateExportText(exportObject) {
+        let output = "";
+        let languages = {};
+
+        // Group keys by language
+        for (let key in exportObject) {
+          let parts = key.split("-");
+          let lang = parts[parts.length - 1]; // last part is the language code
+          if (!languages[lang]) {
+            languages[lang] = {};
+          }
+          languages[lang][key] = exportObject[key];
+        }
+
+        // Sort languages alphabetically, then sort keys inside each language
+        let sortedLangs = Object.keys(languages).sort();
+        for (let lang of sortedLangs) {
+          output += `--- Greek ---\n`;
+          let sortedKeys = Object.keys(languages[lang]).sort();
+          for (let key of sortedKeys) {
+            output += `${key}: ${languages[lang][key]}\n`;
+          }
+          output += "\n"; // extra newline between languages
+        }
+
+        return output.trim();
       }
 
       function downloadData() {
