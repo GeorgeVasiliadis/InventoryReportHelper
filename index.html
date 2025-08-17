@@ -68,6 +68,7 @@
               <th class="w-25">Type</th>
               <th class="w-25">Weight (g)</th>
               <th class="w-25">Count</th>
+              <th class="w-10">Delete</th>
             </tr>
           </thead>
           <tbody>
@@ -125,22 +126,33 @@
           .getElementById(tableName)
           .getElementsByTagName("tbody")[0];
         let newRow = table.insertRow();
+
         let cell1 = newRow.insertCell(0);
         let cell2 = newRow.insertCell(1);
         let cell3 = newRow.insertCell(2);
         let cell4 = newRow.insertCell(3);
-        cell1.innerHTML = '<input type="text" class="form-control" spellcheck="false" autocomplete="off" />';
+        let cell5 = newRow.insertCell(4); // Delete button cell
+
+        cell1.innerHTML =
+          '<input type="text" class="form-control" spellcheck="false" autocomplete="off" />';
         cell2.innerHTML =
           '<select class="form-control" onchange="recalculateCount(this)"></select>';
         cell3.innerHTML =
           '<input type="number" step="0.01" class="form-control" oninput="recalculateCount(this)" />';
         cell4.innerHTML =
           '<input type="number" class="form-control" oninput="manualCountChange(this)" />';
-        // Populate the dropdown with the weightMapping keys for new row
+        cell5.classList.add("text-center"); // Center content in the cell
+        cell5.innerHTML =
+          '<button class="btn btn-danger btn-sm" onclick="deleteRow(this)">×</button>';
+
+        // Populate the dropdown
         let select = cell2.querySelector("select");
         populateTypeDropdown(select);
-        // Set the default type to the first available key
         select.value = Object.keys(weightMapping)[0];
+      }
+      function deleteRow(button) {
+        let row = button.closest("tr");
+        row.remove();
       }
       function recalculateCount(element) {
         let row = element.closest("tr");
