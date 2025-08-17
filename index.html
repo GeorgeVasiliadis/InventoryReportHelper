@@ -47,16 +47,23 @@
   <body>
     <div class="header-panel">Inventory Report Helper</div>
     <div class="container mt-5 shadow p-2">
-      <div class="mb-3 text-center">
-        <label for="description" class="form-label fw-bold">Description</label>
-        <input
-          type="text"
-          id="description"
-          class="form-control text-center"
-          value="Greek"
-          spellcheck="false"
-          autocomplete="off"
-        />
+      <div class="mb-3 row align-items-center">
+        <label
+          for="description"
+          class="col-2 col-form-label fw-bold text-center"
+        >
+          Description
+        </label>
+        <div class="col-10">
+          <input
+            type="text"
+            id="description"
+            class="form-control"
+            value="Greek"
+            spellcheck="false"
+            autocomplete="off"
+          />
+        </div>
       </div>
       <div class="table-container">
         <table class="table table-bordered table-striped" id="table">
@@ -150,8 +157,7 @@
           '<select class="form-control" onchange="recalculateCount(this)"></select>';
         cell3.innerHTML =
           '<input type="number" step="0.01" class="form-control" oninput="recalculateCount(this)" />';
-        cell4.innerHTML =
-          '<input type="number" class="form-control" oninput="manualCountChange(this)" />';
+        cell4.innerHTML = '<input type="number" class="form-control" />';
         cell5.classList.add("text-center"); // Center content in the cell
         cell5.innerHTML =
           '<button class="btn btn-danger btn-sm" onclick="deleteRow(this)"><i class="bi bi-trash"></i></button>';
